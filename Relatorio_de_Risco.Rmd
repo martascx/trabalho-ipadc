@@ -1,0 +1,70 @@
+---
+title: "Relatório de Risco de Doença Cardiovascular"
+author: ""
+date: ""
+output:
+  pdf_document:
+    latex_engine: xelatex
+  word_document: default
+fontsize: 12pt
+mainfont: Arial
+sansfont: Arial
+monofont: Courier New
+geometry: left=1in, right=1in, top=0.2in, bottom=0.2in
+
+header-includes:
+  - \usepackage{titlesec}
+  - \usepackage{xcolor}
+  - \usepackage{titling}
+  - \usepackage{fancyhdr}
+  - \pagestyle{fancy}
+  - \fancyhead[L]{\Large\thetitle}
+  - \fancyhead[C]{}
+  - \fancyhead[R]{}
+  - \pretitle{\begin{flushleft}\LARGE\bfseries\color{teal}}
+  - \titleformat{\section}{\sffamily\Large\bfseries\raggedleft\color{teal}}{\thesection}{1em}{}
+  - \posttitle{\vspace{0.2em}\par\textcolor{teal}{\rule{\linewidth}{1pt}}\end{flushleft}\begin{flushleft}\large Clínica Cardiovascular IPADC\\\small `r Sys.Date()`\end{flushleft}}
+  - \titleformat{\subsection}{\sffamily\large\bfseries\color{teal}}{\thesubsection}{1em}{}
+
+params:
+  nome_utente: João Silva
+  idade: 35
+  id: 12345
+  sexo: 0
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+#Packages needed
+library(knitr)
+library(kableExtra)
+library(grid)
+library(gridExtra)
+
+# Simular inputs (R Markdown não tem input$... como Shiny)
+input <- list(
+  nome_utente = params$nome_utente,
+  idade = params$idade,
+  id = params$id,
+  sexo = ifelse(params$sexo==0, "M", "F")
+)
+
+risco_guardado <- TRUE
+#Alterar quando for para versão final, agora apenas para teste
+```
+
+\vspace{-4em}
+\begin{flushleft}
+\textbf{Nome:}`r params$nome_utente` \hfill
+\textbf{Idade:}`r params$idade` \hfill
+\textbf{Sexo:}`r params$sexo` \hfill
+\textbf{ID:}`r params$id` \hfill
+\end{flushleft}
+
+
+
+\footnotesize
+Aviso Legal: 
+Este relatório não é um documento oficial, apenas destinado para fins académicos. Não foi revisto pelas entidades reguladoras e pode conter erros. A utilização deste relatório é da responsabilidade do utilizador. A universidade associada e os alunos que o desenvolveram não se responsabilizam por quaisquer decisões tomadas através do seu conteúdo. Para um diagnóstico consulte um profissional de saúde qualificado.
+
+
