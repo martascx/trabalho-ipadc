@@ -23,7 +23,7 @@ header-includes:
   - \fancyhead[R]{}
   - \pretitle{\begin{flushleft}\LARGE\bfseries\color{teal}}
   - \titleformat{\section}{\sffamily\Large\bfseries\raggedleft\color{teal}}{\thesection}{1em}{}
-  - \posttitle{\vspace{0.2em}\par\textcolor{teal}{\rule{\linewidth}{1pt}}\end{flushleft}\begin{flushleft}\large Clínica Cardiovascular IPADC\\\small `r Sys.Date()`\end{flushleft}}
+  - \posttitle{\vspace{0.2em}\par\textcolor{teal}{\rule{\linewidth}{1pt}}\end{flushleft}\begin{flushleft}\large Clínica Cardiovascular IPADC\\\small Emissão:`r Sys.Date()`\end{flushleft}}
   - \titleformat{\subsection}{\sffamily\large\bfseries\color{teal}}{\thesubsection}{1em}{}
 
 params:
@@ -61,10 +61,28 @@ risco_guardado <- TRUE
 \textbf{ID:}`r params$id` \hfill
 \end{flushleft}
 
+```{r tabela_dados, echo=FALSE, message=FALSE, warning=FALSE}  
+#Criar o dataframe para a tabela
+dados = data.frame(row.names = c("Data","CT", "HDL", "PAS", "TH", "Diabetes", "Fumador", "RC (%)"), T0 = c(params$id, 220, 55, 135, "Sim", "Não", "Não", 12), T1 = c(params$id, 220, 55, 135, "Sim", "Não", "Não", 12), T2 = c(params$id, 220, 55, 135, "Sim", "Não", "Não", 12)) 
+
+# --- Nova medição recebida ---
+nova_medicao <- c("12345", 200, 60, 128, "Não", "Não", "Não", 8)
+
+#Adicionar a coluna nova
+if (nova_medicao[1]==dados[1,1]){
+  dados = cbind(dados, T3 = nova_medicao)
+}
+
+#Criar a tabela
+dados %>%
+kable("latex", booktabs = TRUE, caption = NULL) %>%
+kable_styling(latex_options = c("striped", "hold_position", "scale_down"), full_width = TRUE)
+```
+\scriptsize CT: Colesterol Total (mg/dL); HDL: Lipoproteínas de alta densidade (mg/dL), PAS: Pressão Arterial Sistólica (mmHg); TH: Tratamento de Hipertensão, RC: % de risco cardiovascular estimado
 
 
+
+\vspace{20em}
 \footnotesize
-Aviso Legal: 
-Este relatório não é um documento oficial, apenas destinado para fins académicos. Não foi revisto pelas entidades reguladoras e pode conter erros. A utilização deste relatório é da responsabilidade do utilizador. A universidade associada e os alunos que o desenvolveram não se responsabilizam por quaisquer decisões tomadas através do seu conteúdo. Para um diagnóstico consulte um profissional de saúde qualificado.
 
-
+Aviso Legal: Este relatório não é um documento oficial, apenas destinado para fins académicos. Não foi revisto pelas entidades reguladoras e pode conter erros. A utilização deste relatório é da responsabilidade do utilizador. A universidade associada e os alunos que o desenvolveram não se responsabilizam por quaisquer decisões tomadas através do seu conteúdo. Para um diagnóstico consulte um profissional de saúde qualificado.
