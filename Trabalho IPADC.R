@@ -44,7 +44,27 @@ estimated_risk(1,53,1,161,55,125,0,1)
 ####################################################################
 library(shiny)
 library(shinyTime)
+library(shinydashboard)
+library(shinyjs)
+
+library(rmarkdown)
+library(readxl)
+library(openxlsx)
+
+library(grid)
+library(scales)
 library(ggplot2)
+library(DT)
+library(plotly)
+
+library(htmltools)
+library(data.table)
+
+
+library(DT)
+
+library(dplyr)
+library(RColorBrewer)
 
 
 #para resolver problemas de limitação do upload dos ficheiros:
@@ -173,7 +193,7 @@ ui <- fluidPage(
                        htmlOutput("smoker_saved"),
                        radioButtons("diabetic", "Diabético:", choices = c("Não" = 0, "Sim" = 1)),
                        actionButton("calcular", "Calcular Risco"),
-                       actionButton("guardar", "Guardar Valores")
+                       actionButton("save", "Guardar Valores")
                    ),
                    
                    box(title = "Estimativa de Risco", width = 6,
@@ -254,14 +274,14 @@ server <- function(input, output, session) {
     saved_risk <- estimated_risk(sex,age,treated,tcl_saved,hdl_saved,sbp_saved,smoker_saved,diabetic)
     return(c(saved_risk, tcl_saved, hdl_saved, sbp_saved, smoker_saved))
   })
-  
+
   # Exibir a estimativa de risco
   output$estimated_risk <- renderUI({
     risco <- calculo_risco()
     HTML(paste("<h5>Estimativa atual de risco: <strong>", risco, "%</strong></h3>"))
   })
   
-  output$ctcl_high <- renderUI({
+  output$tcl_high <- renderUI({
     if (as.numeric(input$tcl) > 200){
       HTML(paste("<h6 style=\"color:red;\">Valor de Colesterol Alto!"))
     }
@@ -338,28 +358,30 @@ server <- function(input, output, session) {
       
       if (!is.null(saved_risk)) {
         grid.text(paste("Nome do Utente:", input$patient_name), x = 0, y = 0.85, just = "left", gp = gpar(fontsize = 12))
-        grid.text(paste("Idade:", input$age), x = 0, y = 0.82, just = "left", gp = gpar(fontsize = 12))
-        grid.text(paste("Sexo:", ifelse(input$sex == 0, "Masculino", "Feminino")), x = 0, y = 0.79, just = "left", gp = gpar(fontsize = 12))
-        grid.text(paste("Colesterol Total:", saved_risk[2]), x = 0, y = 0.76, just = "left", gp = gpar(fontsize = 12))
-        grid.text(paste("hdl:", saved_risk[3]), x = 0, y = 0.73, just = "left", gp = gpar(fontsize = 12))
-        grid.text(paste("Pressão Arterial Sistólica:", saved_risk[4]), x = 0, y = 0.70, just = "left", gp = gpar(fontsize = 12))
-        grid.text(paste("Tratamento:", ifelse(input$treated == 0, "Não", "Sim")), x = 0, y = 0.67, just = "left", gp = gpar(fontsize = 12))
-        grid.text(paste("Diabético:", ifelse(input$diabetic == 0, "Não", "Sim")), x = 0, y = 0.64, just = "left", gp = gpar(fontsize = 12))
-        grid.text(paste("Fumador:", ifelse(saved_risk[5] == 0, "Não", "Sim")), x = 0, y = 0.61, just = "left", gp = gpar(fontsize = 12))
+        grid.text(paste("Data e Hora da medição:",input$time_input), x = 0, y = 0.82, just = "left", gp = gpar(fontsize = 12))
+        grid.text(paste("Número de Utente:", input$n_utente), x = 0, y = 0.79, just = "left", gp = gpar(fontsize = 12))
+        grid.text(paste("Idade:", input$age), x = 0, y = 0.76, just = "left", gp = gpar(fontsize = 12))
+        grid.text(paste("Sexo:", ifelse(input$sex == 0, "Masculino", "Feminino")), x = 0, y = 0.73, just = "left", gp = gpar(fontsize = 12))
+        grid.text(paste("Colesterol Total:", saved_risk[2]), x = 0, y = 0.70, just = "left", gp = gpar(fontsize = 12))
+        grid.text(paste("hdl:", saved_risk[3]), x = 0, y = 0.67, just = "left", gp = gpar(fontsize = 12))
+        grid.text(paste("Pressão Arterial Sistólica:", saved_risk[4]), x = 0, y = 0.64, just = "left", gp = gpar(fontsize = 12))
+        grid.text(paste("Tratamento:", ifelse(input$treated == 0, "Não", "Sim")), x = 0, y = 0.61, just = "left", gp = gpar(fontsize = 12))
+        grid.text(paste("Diabético:", ifelse(input$diabetic == 0, "Não", "Sim")), x = 0, y = 0.58, just = "left", gp = gpar(fontsize = 12))
+        grid.text(paste("Fumador:", ifelse(saved_risk[5] == 0, "Não", "Sim")), x = 0, y = 0.55, just = "left", gp = gpar(fontsize = 12))
         
-        grid.text(paste("Estimativa de Risco Cardiovascular:", round(saved_risk[1] * 100, 2), "%"),
-                  x = 0, y = 0.58, just = "left", gp = gpar(fontsize = 14, fontface = "bold", col = "red"))
+        grid.text(paste("Estimativa de Risco Cardiovascular:", saved_risk[1], "%"),
+                  x = 0, y = 0.52, just = "left", gp = gpar(fontsize = 14, fontface = "bold", col = "red"))
         
-        grid.text(paste("Novo Valor de Colesterol Total:", input$tcl), x = 0, y = 0.53, just = "left", gp = gpar(fontsize = 12))
-        grid.text(paste("Novo Valor de hdl:", input$hdl), x = 0, y = 0.50, just = "left", gp = gpar(fontsize = 12))
-        grid.text(paste("Novo Valor de Pressão Arterial Sistólica:", input$sbp), x = 0, y = 0.47, just = "left", gp = gpar(fontsize = 12))
-        grid.text(paste("Fumador:", ifelse(input$smoker == 0, "Não", "Sim")), x = 0, y = 0.44, just = "left", gp = gpar(fontsize = 12))
+        grid.text(paste("Novo Valor de Colesterol Total:", input$tcl), x = 0, y = 0.49, just = "left", gp = gpar(fontsize = 12))
+        grid.text(paste("Novo Valor de hdl:", input$hdl), x = 0, y = 0.46, just = "left", gp = gpar(fontsize = 12))
+        grid.text(paste("Novo Valor de Pressão Arterial Sistólica:", input$sbp), x = 0, y = 0.43, just = "left", gp = gpar(fontsize = 12))
+        grid.text(paste("Fumador:", ifelse(input$smoker == 0, "Não", "Sim")), x = 0, y = 0.4, just = "left", gp = gpar(fontsize = 12))
         
         risco <- calculo_risco()
         grid.text(paste("Nova Estimativa de Risco Cardiovascular:", risco, "%"), 
-                  x = 0, y = 0.41, just = "left", gp = gpar(fontsize = 14, fontface = "bold", col = "red"))
+                  x = 0, y = 0.37, just = "left", gp = gpar(fontsize = 14, fontface = "bold", col = "red"))
         
-        grid.text(paste("Recomendações:"), x = 0, y = 0.36, just = "left", gp = gpar(fontsize = 12, col = "blue"))
+        grid.text(paste("Recomendações:"), x = 0, y = 0.34, just = "left", gp = gpar(fontsize = 12, col = "blue"))
         
         if (saved_risk[2] > 200) {
           grid.text(paste("Colesterol Total Alto: Tente baixar para", input$tcl,", adotanto um estilo de vida mais saudável.\nExemplo: diminuir as comidas gordurosas, comer mais alimentos como frutas e vegetais e praticar exercício."), x = 0, y = 0.32, just = "left", gp = gpar(fontsize = 11))
@@ -374,7 +396,9 @@ server <- function(input, output, session) {
         
       } else {
         grid.text(paste("Nome do Utente:", input$patient_name), x = 0, y = 0.85, just = "left", gp = gpar(fontsize = 12))
-        grid.text(paste("Idade:", input$age), x = 0, y = 0.82, just = "left", gp = gpar(fontsize = 12))
+        grid.text(paste("Data e Hora da medição:", input$date, input$time_input), x = 0, y = 0.82, just = "left", gp = gpar(fontsize = 12))
+        grid.text(paste("Número de Utente:", input$n_utente), x = 0, y = 0.79, just = "left", gp = gpar(fontsize = 12))
+        grid.text(paste("Idade:", input$age), x = 0, y = 0.76, just = "left", gp = gpar(fontsize = 12))
         grid.text(paste("Sexo:", ifelse(input$sex == 0, "Masculino", "Feminino")), x = 0, y = 0.79, just = "left", gp = gpar(fontsize = 12))
         grid.text(paste("Colesterol Total:", input$tcl), x = 0, y = 0.76, just = "left", gp = gpar(fontsize = 12))
         grid.text(paste("hdl:", input$hdl), x = 0, y = 0.73, just = "left", gp = gpar(fontsize = 12))
