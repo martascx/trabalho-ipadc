@@ -346,11 +346,10 @@ server <- function(input, output, session) {
       
       # Dados para tabela
       dados <- data.frame(
-        Variável = c("Nome", "Idade", "Sexo", "Número de utente",
+        Variável = c("Idade", "Sexo", "Número de utente",
                      "Colesterol Total (CT)", "HDL", "PAS", "Tratamento Hipertensão (TH)",
                      "Diabetes", "Fumador", "Risco Cardiovascular (%)"),
         Valor = c(
-          input$patient_name,
           input$age,
           ifelse(input$sex == 0, "Feminino", "Masculino"),
           input$n_utente,
@@ -400,3 +399,4 @@ server <- function(input, output, session) {
 }
 
 shinyApp(ui, server)
+
