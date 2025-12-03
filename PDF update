@@ -187,7 +187,7 @@ ui <- fluidPage(
                        htmlOutput("hdl_saved"),
                        numericInput("sbp", "Pressão Arterial Sistólica:", 120, min = 80, max = 300),
                        htmlOutput("sbp_saved"),
-                       radioButtons("sex", "Sexo:", choices = c("Masculino" = 0, "Feminino" = 1)),
+                       radioButtons("sex", "Sexo:", choices = c("Feminino" = 0, "Masculino" = 1)),
                        radioButtons("treated", "Em Tratamento:", choices = c("Não" = 0, "Sim" = 1)),
                        radioButtons("smoker", "Fumador:", choices = c("Não" = 0, "Sim" = 1)),
                        htmlOutput("smoker_saved"),
