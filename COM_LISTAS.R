@@ -1,0 +1,512 @@
+#Projeto IPADC
+
+
+#Função
+# tcl = total cholesterol, sbp = systolic blood pressure, treated = treatment for hbp
+estimated_risk = function(sex,age,treated,tcl,hdl,sbp,smoker,diabetic) {
+  if (sex == 0) { #Woman
+    S0 = 0.95012
+    if (treated == 0) {
+      logtreated = 2.76157
+    } else {
+      logtreated = 2.82263
+    }
+    
+    soma = 2.32888*log(age) + 1.20904*log(tcl) - 0.70833*log(hdl) +
+      logtreated*log(sbp) + 0.52873*smoker + 0.69154*diabetic
+    risco = (1 - S0^exp(soma-26.1931))*100
+    
+    return(round(risco,digits=1))
+    
+  } else { #Men
+    S0 = 0.88936
+    if (treated == 0) {
+      logtreated = 1.93303 
+    } else {
+      logtreated = 1.99881
+    }
+    
+    soma = 3.06117*log(age) + 1.12370*log(tcl) - 0.93263*log(hdl) +
+      logtreated*log(sbp) + 0.65451*smoker + 0.57367*diabetic
+    risco = (1 - S0^exp(soma-23.9802))*100
+    
+    return(round(risco,digits=1))
+  }
+}  
+
+estimated_risk(0,61,0,180,47,124,1,0)
+estimated_risk(1,53,1,161,55,125,0,1)
+
+
+
+####################################################################
+#INTERFACE SHINY
+####################################################################
+library(shiny)
+library(shinyTime)
+library(shinydashboard)
+library(shinyjs)
+
+library(rmarkdown)
+library(readxl)
+library(openxlsx)
+
+library(grid)
+library(scales)
+library(ggplot2)
+library(DT)
+library(plotly)
+
+library(htmltools)
+library(data.table)
+
+
+library(DT)
+
+library(dplyr)
+library(RColorBrewer)
+
+
+#para resolver problemas de limitação do upload dos ficheiros:
+options(shiny.maxRequestSize = 50 * 1024^2)
+
+
+ui <- fluidPage(
+  useShinyjs(),
+  
+  tags$style(HTML("
+  .plot-container, .table-container {
+    max-width: 800px;
+    margin: auto;
+    padding-bottom: 20px;
+  }
+")),
+  
+  
+  tags$head(
+    tags$style(HTML("
+  .plot-container {
+    max-width: 800px;
+    margin: auto;
+    padding-bottom: 20px;
+  }
+")),
+    
+    
+    tags$style(HTML("
+      nav {
+        background-color: #2B2D42;
+        padding: 10px;
+      }
+      nav ul {
+        list-style-type: none;
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+      }
+      nav li {
+        float: left;
+        margin-right: 20px;
+      }
+      nav li a {
+        color: white;
+        text-decoration: none;
+        font-weight: bold;
+        padding: 8px 12px;
+        display: inline-block;
+      }
+      nav li a:hover {
+        background-color: #34495e;
+        border-radius: 5px;
+      }
+      .page-container {
+        padding: 20px;
+        font-family: 'Segoe UI', sans-serif;
+      }
+      h2 {
+        color: #2c3e50;
+      }
+      .contact-box {
+        background-color: #ecf0f1;
+        padding: 15px;
+        border-radius: 8px;
+        width: fit-content;
+      }
+    "))
+  ),
+  
+  # Navigation bar
+  tags$nav(
+    tags$ul(
+      tags$li(actionLink("nav_home", "Página inicial", , shiny::icon('home'))),
+      tags$li(actionLink("nav_calculator", "Calculadora", , shiny::icon('calculator'))),
+      tags$li(actionLink("nav_about", "  Sobre", , shiny::icon('info-circle'))),
+    )
+  ),
+  
+  # Page content container
+  div(class = "page-container",
+      
+      # --- Home Page ---
+      div(id = "page_home",
+          h2("Calculadora do risco cardiovascular"),
+          p("Calculadora do risco"),
+          
+      ),
+      
+      
+      
+      # --- Contact Page ---
+      hidden(div(id = "page_calculator",
+                 h2("Calculadora"),
+                 fluidRow(
+                   box(title = "Dados do Paciente", width = 6,
+                       textInput("patient_name", "Nome do Utente:"), # Novo campo para o nome do utente
+                       numericInput("age", "Idade:", 50, min = 30, max = 120),
+                       textInput("n_utente", "Número de utente"),
+                       numericInput("tcl", "Colesterol Total:", 200, min = 100, max = 500),
+                       htmlOutput("tcl_saved"),
+                       dateInput(
+                         'date',
+                         'Data da análise',
+                         value = NULL,
+                         min = NULL,
+                         max = NULL,
+                         format = "dd-mm-yyyy",
+                         startview = "month",
+                         weekstart = 0,
+                         language = "en",
+                         width = NULL,
+                         autoclose = TRUE,
+                         datesdisabled = NULL,
+                         daysofweekdisabled = NULL
+                       ),
+                       timeInput("time_input", "Hora: ", seconds=FALSE),
+                       mainPanel(textOutput("time_output")),
+                       numericInput("hdl", "hdl:", 50, min = 30, max = 100),
+                       htmlOutput("hdl_saved"),
+                       numericInput("sbp", "Pressão Arterial Sistólica:", 120, min = 80, max = 300),
+                       htmlOutput("sbp_saved"),
+                       radioButtons("sex", "Sexo:", choices = c("Feminino" = 0, "Masculino" = 1)),
+                       radioButtons("treated", "Em Tratamento:", choices = c("Não" = 0, "Sim" = 1)),
+                       radioButtons("smoker", "Fumador:", choices = c("Não" = 0, "Sim" = 1)),
+                       htmlOutput("smoker_saved"),
+                       radioButtons("diabetic", "Diabético:", choices = c("Não" = 0, "Sim" = 1)),
+                       actionButton("calcular", "Calcular Risco"),
+                       actionButton("save", "Guardar Valores")
+                   ),
+                   
+                   box(title = "Estimativa de Risco", width = 6,
+                       htmlOutput("estimated_risk"), 
+                       htmlOutput("saved_risk"),
+                       htmlOutput("tcl_high"),
+                       htmlOutput("sbp_high"),
+                       htmlOutput("aviso_legal"),
+                       downloadButton("download_relatorio", "Criar PDF"),
+                       #DEBUG:
+                       br(), hr(),
+                       h4("Base de Dados (Tempo Real):"),
+                       p("Aqui podes ver a lista 'd' a crescer com cada clique em Guardar:"),
+                       verbatimTextOutput("debug_lista") #ATÉ AQUI
+                   )
+                 )
+      )),
+      
+      # --- About Page ---
+      hidden(div(id = "page_about",
+                 p("Aplicação feita para o projeto de IPADC"),
+      )),
+  )
+)
+
+
+server <- function(input, output, session) {
+  
+  
+  #––– PAGE NAVIGATION –––
+  showPage <- function(pageId) {
+    message("Escondendo todas as páginas")
+    shinyjs::hide("page_home")
+    shinyjs::hide("page_about")
+    shinyjs::hide("page_calculator")
+    message("Tentando mostrar página: ", pageId)
+    shinyjs::show(pageId)
+    shinyjs::runjs(sprintf("
+      console.log('Tentando mostrar %s');
+      var elem = document.getElementById('%s');
+      if (elem) {
+        elem.style.display = 'block';
+        console.log('Elemento %s encontrado e definido como visível');
+      } else {
+        console.log('Elemento %s NÃO encontrado');
+      }", pageId, pageId, pageId, pageId))
+  }
+  observeEvent(input$nav_home,   { showPage("page_home") })
+  observeEvent(input$nav_about,  { showPage("page_about") })
+  observeEvent(input$nav_calculator,{ showPage("page_calculator") })
+  
+  
+  # Função para calcular o risco cardiovascular
+  calculo_risco <- reactive({
+    req(input$calcular)
+    
+    sex <- as.numeric(input$sex)
+    age <- as.numeric(input$age)
+    tcl <- as.numeric(input$tcl)
+    hdl <- as.numeric(input$hdl)
+    sbp <- as.numeric(input$sbp)
+    treated <- as.numeric(input$treated)
+    smoker <- as.numeric(input$smoker)
+    diabetic <- as.numeric(input$diabetic)
+    #sex,age,treated,tcl,hdl,sbp,smoker,diabetic
+    risco <- estimated_risk(sex,age,treated,tcl,hdl,sbp,smoker,diabetic)
+    estimated_risk(0,61,0,180,47,124,1,0)
+    message("Dados: ", sex, " ", age, " ", treated, " ",tcl, " ",hdl," ", sbp, " ", smoker," ", diabetic)
+    return(risco)
+  })
+  
+  rv <- reactiveValues(d=list())
+  observeEvent(input$save, {
+    req(input$n_utente) #isto garante que é preciso que haja um número de utente
+    #introdução de dados
+    if (input$calcular==0) {
+      showNotification("Erro: O risco cardiovascular tem de ser calculado antes de guardar os valores.",type="error")
+      return() #termina a função sem que seja guardado nada
+    }
+    risco_atual<-calculo_risco()
+    id <- as.character(input$n_utente) #isto impede que o ID seja confundido com 
+    #um índice
+    values <- list( #para guardar os valores que serão usados para atualizar a lista
+      #de valores de cada paciente
+      nome=input$patient_name,
+      idade=input$age,
+      sexo=input$sex,
+      colesterol_total=input$tcl,
+      hdl=input$hdl,
+      pas=input$pas,
+      treatment=input$treated,
+      diab=input$diabetic,
+      smoke=input$smoker,
+      cdv=risco_atual)
+    temp_d <- rv$d
+    
+    if (id %in% names(temp_d)) {
+      # ID JÁ EXISTE: Anexa à lista existente
+      temp_d[[id]] <- c(temp_d[[id]], list(values))
+    } else {
+      # NOVO ID: Cria nova entrada
+      temp_d[[id]] <- list(values)
+    }
+    
+    rv$d <- temp_d # Atualiza a variável reativa global
+    
+    showNotification(paste("Guardado! Total de registos para", id, ":", length(rv$d[[id]])), type = "message")
+  })
+  
+  # DEBUG
+  output$debug_lista <- renderPrint({
+    # Se a lista estiver vazia
+    if (length(rv$d) == 0) {
+      cat("A lista está vazia. Introduza dados e carregue em 'Guardar Valores'.")
+    } else {
+      # Mostra TUDO o que está na lista d
+      print(rv$d)
+    }
+  })
+  
+  guardar_risco <- eventReactive(input$save,{
+    
+    sex <- as.numeric(input$sex)
+    age <- as.numeric(input$age)
+    tcl_saved <- as.numeric(input$tcl)
+    hdl_saved <- as.numeric(input$hdl)
+    sbp_saved <- as.numeric(input$sbp)
+    treated <- as.numeric(input$treated)
+    smoker_saved <- as.numeric(input$smoker)
+    diabetic <- as.numeric(input$diabetic)
+    
+    saved_risk <- estimated_risk(sex,age,treated,tcl_saved,hdl_saved,sbp_saved,smoker_saved,diabetic)
+    return(c(saved_risk, tcl_saved, hdl_saved, sbp_saved, smoker_saved))
+  })
+  
+  # Exibir a estimativa de risco
+  output$estimated_risk <- renderUI({
+    risco <- calculo_risco()
+    HTML(paste("<h5>Estimativa atual de risco: <strong>", risco, "%</strong></h3>"))
+  })
+  
+  output$tcl_high <- renderUI({
+    if (as.numeric(input$tcl) > 200){
+      HTML(paste("<h6 style=\"color:red;\">Valor de Colesterol Alto!"))
+    }
+  })
+  
+  output$sbp_high <- renderUI({
+    if (as.numeric(input$sbp) > 130){
+      HTML(paste("<h6 style=\"color:red;\">Valor de sbp high!"))
+    }
+  })
+  
+  output$saved_risk <- renderUI({
+    valores_saved <- guardar_risco()
+    HTML(paste("<h5>Estimativa original do risco: <strong>", valores_saved[1], "%</strong></h3>"))
+  })
+  
+  output$tcl_saved <- renderUI({
+    valores_saved <- guardar_risco()
+    
+    HTML(paste("<h5 style=\"color:blue;\"> Valor anterior: <strong>", valores_saved[2]))
+  })
+  
+  output$hdl_saved <- renderUI({
+    valores_saved <- guardar_risco()
+    
+    HTML(paste("<h5 style=\"color:blue;\">Valor anterior: <strong>", valores_saved[3]))
+  })
+  
+  output$sbp_saved <- renderUI({
+    valores_saved <- guardar_risco()
+    
+    HTML(paste("<h5 style=\"color:blue;\">Valor anterior: <strong>", valores_saved[4]))
+  })
+  
+  output$smoker_saved <- renderUI({
+    valores_saved <- guardar_risco()
+    
+    if (valores_saved[5] == 0){
+      valor_fumador <- "Não Fumador"
+    } else {
+      valor_fumador <- "Fumador"
+    }
+    HTML(paste("<h5 style=\"color:blue;\">Valor anterior: <strong>", valor_fumador))
+  })
+  
+  output$aviso_legal <- renderUI({
+    HTML("<br><strong>Aviso Legal:</strong><br>
+       Este relatório destina-se exclusivamente a fins académicos e não constitui um documento médico oficial.
+       Não foi revisto pelas autoridades reguladoras e pode conter erros.
+       A utilização deste relatório é da inteira responsabilidade do utilizador.
+       Os criadores e a universidade afiliada não assumem qualquer responsabilidade por decisões tomadas com base no seu conteúdo.
+       Para questões médicas, por favor consulte um profissional de saúde qualificado.")
+  })  
+  # Gerar o PDF
+  output$download_relatorio <- downloadHandler(
+    filename = function() {
+      paste0("relatorio_", input$patient_name, "_", Sys.Date(), ".pdf")
+    },
+    content = function(file) {
+      library(gridExtra)
+      library(grid)
+      library(gtable)   # <--- importante para mexer nas células
+      
+      risco <- calculo_risco()
+      
+      # Dados para tabela
+      dados <- data.frame(
+        Variável = c("Idade", "Sexo", "Número de utente",
+                     "Colesterol Total (CT)", "HDL", "PAS",
+                     "Tratamento Hipertensão (TH)",
+                     "Diabetes", "Fumador", "Risco Cardiovascular (%)"),
+        Valor = c(
+          input$age,
+          ifelse(input$sex == 0, "Feminino", "Masculino"),
+          input$n_utente,
+          input$tcl,
+          input$hdl,
+          input$sbp,
+          ifelse(input$treated == 1, "Sim", "Não"),
+          ifelse(input$diabetic == 1, "Sim", "Não"),
+          ifelse(input$smoker == 1, "Sim", "Não"),
+          sprintf("%.1f %%", risco)
+        ),
+        stringsAsFactors = FALSE
+      )
+      
+      # Abrir PDF
+      pdf(file, width = 8.5, height = 11)
+      
+      # Título
+      grid.text("Relatório de Risco Cardiovascular",
+                y = 0.96, gp = gpar(fontsize = 22, fontface = "bold", col = "#2B2D42"))
+      
+      # Subtítulo
+      grid.text(paste0("Paciente: ", input$patient_name, "   |   Data: ", Sys.Date()),
+                y = 0.93, gp = gpar(fontsize = 14))
+      
+      # Tema da tabela
+      tema <- ttheme_default(
+        core = list(
+          fg_params = list(cex = 1.3),
+          bg_params = list(fill = "#FFFFFF")
+        ),
+        colhead = list(
+          fg_params = list(cex = 1.4, fontface = "bold", col = "white"),
+          bg_params = list(fill = "#2B2D42")
+        )
+      )
+      
+      t <- tableGrob(dados, rows = NULL, theme = tema)
+      
+      # Deixar a tabela mais baixinha (sem esticar em altura)
+      t$heights <- t$heights * 1.4
+      
+      # === Pintar APENAS a linha do "Risco Cardiovascular (%)" de rosinha ===
+      risco_row <- nrow(dados)            # última linha da tabela
+      
+      # Encontrar bg e fg dessa linha (coluna 1 = label, coluna 2 = valor)
+      idx_bg <- which(
+        t$layout$name == "core-bg" &
+          t$layout$t == (risco_row + 1)   &  # +1 por causa do cabeçalho
+          t$layout$l %in% c(1, 2)
+      )
+      idx_fg <- which(
+        t$layout$name == "core-fg" &
+          t$layout$t == (risco_row + 1)   &
+          t$layout$l %in% c(1, 2)
+      )
+      
+      # Fundo rosinha
+      for (i in idx_bg) {
+        t$grobs[[i]]$gp$fill <- "#FFD6E7"
+      }
+      
+      # Texto da célula (remover font antes de definir fontface)
+      for (i in idx_fg) {
+        t$grobs[[i]]$gp$font <- NULL   # <-- remove conflitos de tipografia
+        t$grobs[[i]]$gp$col       <- "#8A0033"
+        t$grobs[[i]]$gp$fontface  <- "bold"
+        t$grobs[[i]]$gp$fontsize  <- 12.5
+      }
+      
+      
+      # Desenhar a tabela mais larga e não tão alta
+      pushViewport(viewport(
+        x = 0.5, width = 0.9,    # 90% da largura da página
+        y = 0.55, height = 0.40, # menos altura -> mais “flat”
+        just = c("center", "center")
+      ))
+      grid.draw(t)
+      popViewport()
+      
+      # Aviso legal (texto compacto e dentro da página)
+      aviso <- "Aviso Legal: Este relatório não é um documento oficial, apenas destinado para fins académicos. Não foi revisto pelas entidades reguladoras e pode conter erros. A utilização deste relatório é da responsabilidade do utilizador. A universidade associada e os alunos que o desenvolveram não se responsabilizam por decisões tomadas com base no seu conteúdo. Para um diagnóstico consulte um profissional de saúde qualificado."
+      
+      wrapped <- paste(strwrap(aviso, width = 120), collapse = "\n")
+      
+      grid.text(
+        wrapped,
+        y = 0.10,
+        gp = gpar(fontsize = 9.5, col = "grey40", fontface = "italic"),
+        just = "top"
+      )
+      
+      
+      dev.off()
+    }
+  )
+  
+  
+  
+}
+
+shinyApp(ui, server)
