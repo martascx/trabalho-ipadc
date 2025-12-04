@@ -1,3 +1,4 @@
+
 #Projeto IPADC
 
 
@@ -187,7 +188,7 @@ ui <- fluidPage(
                        htmlOutput("hdl_saved"),
                        numericInput("sbp", "Pressão Arterial Sistólica:", 120, min = 80, max = 300),
                        htmlOutput("sbp_saved"),
-                       radioButtons("sex", "Sexo:", choices = c("Feminino" = 0, "Masculino" = 1)),
+                       radioButtons("sex", "Sexo:", choices = c("Masculino" = 0, "Feminino" = 1)),
                        radioButtons("treated", "Em Tratamento:", choices = c("Não" = 0, "Sim" = 1)),
                        radioButtons("smoker", "Fumador:", choices = c("Não" = 0, "Sim" = 1)),
                        htmlOutput("smoker_saved"),
@@ -349,14 +350,12 @@ server <- function(input, output, session) {
       
       # Dados para tabela
       dados <- data.frame(
-        Variável = c("Idade", "Sexo", "Número de utente",
-                     "Colesterol Total (CT)", "HDL", "PAS",
+        Variável = c("Idade", "Sexo","Colesterol Total (CT)", "HDL", "PAS",
                      "Tratamento Hipertensão (TH)",
                      "Diabetes", "Fumador", "Risco Cardiovascular (%)"),
         Valor = c(
           input$age,
           ifelse(input$sex == 0, "Feminino", "Masculino"),
-          input$n_utente,
           input$tcl,
           input$hdl,
           input$sbp,
@@ -376,8 +375,13 @@ server <- function(input, output, session) {
                 y = 0.96, gp = gpar(fontsize = 22, fontface = "bold", col = "#2B2D42"))
       
       # Subtítulo
-      grid.text(paste0("Paciente: ", input$patient_name, "   |   Data: ", Sys.Date()),
-                y = 0.93, gp = gpar(fontsize = 14))
+      grid.text(
+        paste0("Paciente: ", input$patient_name,
+               "   |   Nº Utente: ", input$n_utente,
+               "   |   Data: ", Sys.Date()),
+        y = 0.93,
+        gp = gpar(fontsize = 14)
+      )
       
       # Tema da tabela
       tema <- ttheme_default(
@@ -456,6 +460,3 @@ server <- function(input, output, session) {
 }
 
 shinyApp(ui, server)
-
-
-
