@@ -278,7 +278,6 @@ server <- function(input, output, session) {
     #um índice
     values <- list( #para guardar os valores que serão usados para atualizar a lista
       #de valores de cada paciente
-      nome=input$patient_name,
       idade=input$age,
       sexo=input$sex,
       colesterol_total=input$tcl,
@@ -430,7 +429,9 @@ server <- function(input, output, session) {
                 y = 0.96, gp = gpar(fontsize = 22, fontface = "bold", col = "#2B2D42"))
       
       # Subtítulo
-      grid.text(paste0("Paciente: ", input$patient_name, "   |   Data: ", Sys.Date()),
+      grid.text(paste0("Paciente: ", input$patient_name, 
+                       "   |   Nº Utente: ",input$n_utente,
+                       "   |   Data: ", Sys.Date()),
                 y = 0.93, gp = gpar(fontsize = 14))
       
       # Tema da tabela
@@ -508,5 +509,6 @@ server <- function(input, output, session) {
   
   
 }
+
 
 shinyApp(ui, server)
