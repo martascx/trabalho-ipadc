@@ -396,9 +396,23 @@ server <- function(input, output, session) {
       grid.text("Relatório de Risco Cardiovascular", y = 0.96, gp = gpar(fontsize = 22, fontface = "bold"))
       grid.text(paste0("Paciente: ", input$patient_name, "   |   Nº Utente: ", input$n_utente, "   |   Data: ", format(Sys.Date(), "%d/%m/%Y")),
                 y = 0.93, gp = gpar(fontsize = 14))
-      grid.text("Histórico Últimos 20 Dias", y=0.88, gp=gpar(fontsize=18, fontface="bold"))
+      
+      # Último Registo
+      tema <- ttheme_default(
+        core = list(fg_params=list(cex=1.3)),
+        colhead = list(fg_params=list(cex=1.4, fontface="bold", col="white"),
+                       bg_params=list(fill="#2B2D42"))
+      )
+      
+      t <- tableGrob(dados, rows=NULL, theme=tema)
+      t$heights <- t$heights * 1.4
+      pushViewport(viewport(x=0.5, y=0.55, width=0.9, height=0.40))
+      grid.draw(t)
+      popViewport()
+      grid.text("Último Registo", y=0.88, gp=gpar(fontsize=18, fontface="bold"))
       
       # Páginas do Histórico (2 tabelas com 5 registos cada por página, no máximo)
+      grid.newpage()
       if (!tem_historico) {
         grid.newpage()
         grid.text("Histórico do Paciente", y=0.97, gp=gpar(fontsize=18, fontface="bold"))
