@@ -136,15 +136,15 @@ ui <- fluidPage(
       # --- Home Page ---
       div(id = "page_home",
           h2("Calculadora do Risco Cardiovascular"),
-          p("As doenças cardiovasculares (DCV) são a princípal causa de morte em 
+          p(style = "font-size:20px;","As doenças cardiovasculares (DCV) são a princípal causa de morte em 
             Portugal e a nível global, representando aproximadamente 37% de 
             todas as mortes na União Europeia (UE).", ),
-          p("A prevenção primária assume um papel fundamental na mitigação do 
+          p(style = "font-size:20px;","A prevenção primária assume um papel fundamental na mitigação do 
             risco de desenvolvimento destas patologias, promovendo modificações 
             comportamentais orientadas para o controlo de fatores de risco, 
             incluindo o tabagismo, o consumo de álcool, os hábitos alimentares 
             inadequados, a inatividade física e o excesso de peso. "),
-          p("Esta calculadora tem como objetivo contribuir de forma útil em 
+          p(style = "font-size:20px;","Esta calculadora tem como objetivo contribuir de forma útil em 
             consultas de Medicina Geral e Familiar, promovendo uma avaliação do 
             risco da ocorrência de eventos cardiovasculares num período de 10 anos.")
       ),
@@ -176,9 +176,9 @@ ui <- fluidPage(
                        ),
                        timeInput("time_input", "Hora: ", seconds=FALSE),
                        mainPanel(textOutput("time_output")),
-                       numericInput("hdl", "hdl:", 50, min = 30, max = 100),
+                       numericInput("hdl", "Colestrol HDL:", 50, min = 30, max = 100),
                        htmlOutput("hdl_saved"),
-                       numericInput("sbp", "Pressão Arterial Sistólica:", 120, min = 80, max = 300),
+                       numericInput("sbp", "Pressão Arterial Sistólica (SAS):", 120, min = 80, max = 300),
                        htmlOutput("sbp_saved"),
                        radioButtons("sex", "Sexo:", choices = c("Feminino" = 0, "Masculino" = 1)),
                        radioButtons("treated", "Em Tratamento:", choices = c("Não" = 0, "Sim" = 1)),
@@ -207,16 +207,25 @@ ui <- fluidPage(
       # About page
       hidden(div(id = "page_about",
                  h2("Informação Adicional"),
-                 p("A calculadora baseia-se na implementação do algoritmo de 
+                 p(style = "font-size:20px;","A calculadora baseia-se na implementação do algoritmo de 
                    risco cardiovascular geral de Framingham (D’Agostino, 2008, 
-                   apêndice pp. 751–752)."),
-                 p("Algoritmo:"),
-                 p("Com base em variáveis clínicas de fácil obtenção, como a idade,
+                   apêndice pp.751–752)."),
+                 p(style = "font-size:20px; margin-bottom:40px;","Algoritmo:$$\\hat{p} = 1 - 
+                   S_0(t)^{\\exp\\left(\\sum_{i=1}^{p} \\beta_i x_i - \\sum_{i=1}^{p} \\beta_i \\bar{x}_i\\right)}$$"),
+                 p(style = "font-size:20px;","Com base em variáveis clínicas de fácil obtenção, como a idade,
                    sexo, níveis de colesterol total e colesterol HDL, pressão arterial sistólica,
                    tratamentos para a hipertensão, tabagismo e diabetes, a aplicação calcula uma estimativa percentual do risco
                    de ocorrência de eventos cardiovasculares num período de 10 anos."),
-                 p("Subsequentemente, a aplicação gera automaticamente um relatório em formato 
-                   PDF contendo...")
+                 p(style = "font-size:20px; margin-bottom:40px;","Subsequentemente, a aplicação gera
+                 automaticamente um relatório em formato PDF. Neste relatório é 
+                 possível encontrar o histórico do paciente com os valores em 
+                 cada consulta e uma evolução temporal das variáveis Risco 
+                 Cardiovascular, Pressão Arterial Sistólica e Colesterol Total 
+                 ilustrada em gráficos."),
+                 p(style = "font-size:20px;","Este projeto foi desenvolvido por Simão Tavares, 
+                   Tomás Matias, Marta Carvalho, João Cordeiro, Rodrigo Curto 
+                   e Pedro Correia no âmbito da disciplina de Introdução Ao 
+                   Processo de Apoio à Decisão Clínica (IPADC).")
       )),
   )
 )
@@ -497,5 +506,6 @@ server <- function(input, output, session) {
   )
   
 }
+
 
 shinyApp(ui, server)
