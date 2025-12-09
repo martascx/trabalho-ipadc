@@ -612,7 +612,7 @@ server <- function(input, output, session) {
         plot(df_hist$datetime, df_hist$colesterol_total, type="b",
              col="#2A9D8F", pch=19, lwd=3, cex=0.8,
              xlab="Data", ylab="Colesterol",
-             main="Colesterol Total",
+             main="Colesterol",
              cex.axis=0.8, cex.lab=0.9)
         lines(df_hist$datetime,df_hist$hdl, type = "b", col = "#E76F51")
         legend("topright", legend = c("Colesterol Total", "HDL"),
@@ -633,4 +633,5 @@ server <- function(input, output, session) {
 
 
 shinyApp(ui, server)
+
 
