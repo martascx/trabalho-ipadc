@@ -151,16 +151,25 @@ ui <- fluidPage(
       
       # --- Home Page ---
       div(id = "page_home",
-          h2("Calculadora do risco cardiovascular"),
-          p("Calculadora do risco"),
-          
+          h2("Calculadora do Risco Cardiovascular"),
+          p("As doenças cardiovasculares (DCV) são a princípal causa de morte em 
+            Portugal e a nível global, representando aproximadamente 37% de 
+            todas as mortes na União Europeia (UE).", ),
+          p("A prevenção primária assume um papel fundamental na mitigação do 
+            risco de desenvolvimento destas patologias, promovendo modificações 
+            comportamentais orientadas para o controlo de fatores de risco, 
+            incluindo o tabagismo, o consumo de álcool, os hábitos alimentares 
+            inadequados, a inatividade física e o excesso de peso. "),
+          p("Esta calculadora tem como objetivo contribuir de forma útil em 
+            consultas de Medicina Geral e Familiar, promovendo uma avaliação do 
+            risco da ocorrência de eventos cardiovasculares num período de 10 anos.")
       ),
       
       
       
       # --- Contact Page ---
       hidden(div(id = "page_calculator",
-                 h2("Calculadora"),
+                 h2("Calculadora do Risco Cardiovascular"),
                  fluidRow(
                    box(title = "Dados do Paciente", width = 6,
                        textInput("patient_name", "Nome do Utente:"), # Novo campo para o nome do utente
@@ -216,7 +225,17 @@ ui <- fluidPage(
       
       # --- About Page ---
       hidden(div(id = "page_about",
-                 p("Aplicação feita para o projeto de IPADC"),
+                 h2("Informação Adicional"),
+                 p("A calculadora baseia-se na implementação do algoritmo de 
+                   risco cardiovascular geral de Framingham (D’Agostino, 2008, 
+                   apêndice pp. 751–752)."),
+                 p("Algoritmo:"),
+                 p("Com base em variáveis clínicas de fácil obtenção, como a idade,
+                   sexo, níveis de colesterol total e colesterol HDL, pressão arterial sistólica,
+                   tratamentos para a hipertensão, tabagismo e diabetes, a aplicação calcula uma estimativa percentual do risco
+                   de ocorrência de eventos cardiovasculares num período de 10 anos."),
+                 p("Subsequentemente, a aplicação gera automaticamente um relatório em formato 
+                   PDF contendo...")
       )),
   )
 )
@@ -276,7 +295,7 @@ server <- function(input, output, session) {
     if (sbp < 70 | sbp > 300) {
       stop("A pressão arterial sistólica tem que estar entre 70 e 300 mmHg.")
     }
-
+    
     else {
       risco <- estimated_risk(sex,age,treated,tcl,hdl,sbp,smoker,diabetic)
       message("Dados: ", sex, " ", age, " ", treated, " ",tcl, " ",hdl," ", sbp, " ", smoker," ", diabetic)
@@ -310,7 +329,7 @@ server <- function(input, output, session) {
       cdv=risco_atual,
       data=input$date,
       hora=as.character(input$time_input)
-      )
+    )
     temp_d <- rv$d
     
     if (id %in% names(temp_d)) {
@@ -443,7 +462,7 @@ server <- function(input, output, session) {
       )
       
       # histórico
-
+      
       id <- as.character(input$n_utente)
       
       if (!id %in% names(rv$d)) {
@@ -459,10 +478,10 @@ server <- function(input, output, session) {
         df_hist <- df_hist[order(df_hist$datetime), ]
         
       }
-
+      
       pdf(file, width = 8.5, height = 11)
       
-
+      
       grid.text("Relatório de Risco Cardiovascular",
                 y = 0.96, gp = gpar(fontsize = 22, fontface = "bold"))
       
@@ -487,7 +506,7 @@ server <- function(input, output, session) {
       popViewport()
       
       # histórico do paciente
-
+      
       grid.newpage()
       grid.text("Histórico do Paciente",
                 y=0.97, gp=gpar(fontsize=18, fontface="bold"))
