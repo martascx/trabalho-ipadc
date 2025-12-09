@@ -61,7 +61,7 @@ options(shiny.maxRequestSize = 50 * 1024^2)
 
 ui <- fluidPage(
   useShinyjs(),
-  
+  withMathJax(),
   tags$style(HTML("
   .plot-container, .table-container {
     max-width: 800px;
@@ -509,3 +509,4 @@ server <- function(input, output, session) {
 
 
 shinyApp(ui, server)
+
