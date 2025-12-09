@@ -457,20 +457,37 @@ server <- function(input, output, session) {
       }
       
       # Criação dos gráficos de evolução temporal
-      grid.newpage()
-      grid.text("Evolução Temporal", y=0.97, gp=gpar(fontsize=18, fontface="bold"))
-      
-      if (tem_historico) {
-        par(mfrow=c(3,1))
-        
-        plot(df_hist$datetime, df_hist$cdv, type="b", col="#E63946", pch=19, lwd=3,
-             xlab="Data", ylab="Risco (%)", main="Evolução do Risco Cardiovascular")
-        
-        plot(df_hist$datetime, df_hist$pas, type="b", col="#1D3557", pch=19, lwd=3,
-             xlab="Data", ylab="PAS", main="Pressão Arterial Sistólica")
-        
-        plot(df_hist$datetime, df_hist$colesterol_total, type="b", col="#2A9D8F", pch=19, lwd=3,
-             xlab="Data", ylab="Colesterol", main="Colesterol Total")
+      if (!"Nota" %in% names(df_hist)) {
+          
+          # 1. Definir o layout e as margens
+          # oma = c(Baixo, Esq, Cima, Dir) -> Nota o '5' no topo para o título
+          par(mfrow=c(3,1), 
+              oma=c(2, 6, 10, 6), 
+              mar=c(4, 4, 2, 1)) 
+          
+          # 2. Desenhar os gráficos
+          plot(df_hist$datetime, df_hist$cdv, type="b",
+               col="#E63946", pch=19, lwd=3, cex=0.8,
+               xlab="", ylab="Risco (%)",
+               main="Risco Cardiovascular",
+               cex.axis=0.8, cex.lab=0.9)
+          
+          plot(df_hist$datetime, df_hist$pas, type="b",
+               col="#1D3557", pch=19, lwd=3, cex=0.8,
+               xlab="", ylab="PAS",
+               main="Pressão Arterial Sistólica",
+               cex.axis=0.8, cex.lab=0.9)
+          
+          plot(df_hist$datetime, df_hist$colesterol_total, type="b",
+               col="#2A9D8F", pch=19, lwd=3, cex=0.8,
+               xlab="Data", ylab="Colesterol",
+               main="Colesterol Total",
+               cex.axis=0.8, cex.lab=0.9)
+          
+          
+          mtext("Evolução Temporal", side=3, line=2, outer=TRUE, 
+                cex=1.5, font=2) # font=2 é negrito
+    
       } else {
         grid.text("Sem histórico suficiente para gráficos.", y=0.5, gp=gpar(fontsize=14, col="grey40"))
       }
